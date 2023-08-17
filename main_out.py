@@ -152,7 +152,7 @@ def out_cloud_min_temp(start_date, end_date):
     
 
 
-def out_ice_flag_thresh(start_date, end_date):
+def out_ice(start_date, end_date):
     
     ice_flag = []
     
@@ -167,7 +167,7 @@ def out_ice_flag_thresh(start_date, end_date):
                             
             for layer in chunk:
                     try:
-                        ice_flag.append([contains_ice(layer),
+                        ice_flag.append([contains_ice(layer)]),
                                     
                                          layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
                         print(layer["time"][0].dt.strftime("%Y-%m-%d-%H-%M").values)
@@ -192,7 +192,7 @@ def out_ice_flag_thresh(start_date, end_date):
     
     save_path = "/home/ralf/Studium/Bachelorarbeit/calc_results"   
     
-    file_name = "ice_flag_thresh"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
+    file_name = "ice_fraction"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
     
     complete_name = os.path.join(save_path, file_name)
         
@@ -325,54 +325,6 @@ def out_cloud_top_height(start_date, end_date):
     print("runtime" + " " +str(datetime.now() - start_time ))                
 
 
-def out_pbl_height(start_date, end_date):
-             
-    
-     pblh = []
-    
-     while start_date <= end_date:
-    
-         try:
-             cloudnet = in_cloudnet(start_date)
-             sounding = in_sounding(start_date)
-             
-                     
-    
-             pblh.append([pbl_theta_new(sounding), str(sounding.date + sounding.hour)])
-    
-         except:
-                 pass
-         
-         start_date += timedelta(hours = 6)
-         
-         
-     # Flatten list
-     pblh_arr = np.array([pblh])
-     save_path = "/home/ralf/Studium/Bachelorarbeit/calc_results"   
-     
-     file_name = "pbl_height"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
-     
-     complete_name = os.path.join(save_path, file_name)
-         
-    
-     #reshape to 2 columns -> I hope this doesnt crash
-     #array.size + 1 to have even integer
-     pblh_flat= pblh_arr.reshape((int((pblh_arr.size+1)/2), 2))
-    
-  #Check runtime
-     
-        
-     with open(os.path.join(save_path, complete_name) + ".txt", "w") as output:
-         for i in np.arange(pblh_flat.shape[0]):
-              output.write(str(pblh_flat[i, 1]))
-              output.write(";")
-              output.write(str(pblh_flat[i, 0]))
-              output.write("\n")
-
-        
-     print("runtime" + " " +str(datetime.now() - start_time ))   
-
-
 
 
 def process_ice(start_date, end_date):
@@ -444,4 +396,4 @@ end_date = datetime(2022, 12, 31,18)
 
 #out_pbl_height(start_date, end_date)
 
-process_ice(start_date, end_date)
+#process_ice(start_date, end_date)
