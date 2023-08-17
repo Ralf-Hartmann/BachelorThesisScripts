@@ -37,7 +37,7 @@ def cloudnet_slicer(cloudnet):
     return cloudnet_chunk
 
 
-def contains_ice_thresh_new(cloudnet):
+def contains_ice(cloudnet):
     
     cloudbase = get_cloudbase(cloudnet)
     
