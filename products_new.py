@@ -38,15 +38,6 @@ ds = xr.open_dataset(path + "time_series_data_new.nc")
 #choose only times all values are present!
 ds = ds.dropna(dim = "time")
 
-#change to regime of heterogenous ice nucleation??
-
-
-dcoup = ds.where(ds.decoupling_height != -9999).dropna(dim = "time")
-coup  = ds.where(ds.decoupling_height == -9999).dropna(dim = "time")
-
-
-
-
 def plot_compare(date):
     class_labels = {
      #   0: 'Clear sky',
@@ -87,15 +78,13 @@ def plot_compare(date):
     
     date = date 
     
-    # Assuming these functions are defined and working properly
     cloudnet = in_cloudnet(date)
     cloud_layer = get_cloud_layer(cloudnet)
     
     
-    # Get the discrete class values from class_labels
+    
     class_values = list(class_labels.keys())
     
-    # Plot the cloud_layer using class_values for the levels
     plot = cloud_layer.plot(y="height", ax=ax[0], levels=class_values, cmap=cmap, add_colorbar = False)
     
     # Update the color bar with centered ticks and labels from class_labels
@@ -109,24 +98,20 @@ def plot_compare(date):
     ax[0].legend()
     
     # Set up the x-axis tick locators and formatter
-    locator = HourLocator(interval=1)  # Show ticks for each hour
+    
+    hour_interval = HourLocator(interval=1)  # Show ticks for each half-hour
     formatter = DateFormatter("%H:%M")  # Format as hours and minutes
     
-    half_hour_interval = HourLocator(interval=1)  # Show ticks for each half-hour
-    formatter = DateFormatter("%H:%M")  # Format as hours and minutes
-    
-    # Apply the tick locators and formatter to the x-axis
-    ax[0].xaxis.set_major_locator(half_hour_interval)
+    ax[0].xaxis.set_major_locator(hour_interval)
     ax[0].xaxis.set_major_formatter(formatter)
     ax[0].grid(visible = True)
     ax[0].set_ylabel("Height amsl [km]")
     #ax[0].set_yticklabels(np.arange(0, 14, 2))
-    ax[0].grid(True, linestyle='--', linewidth=0.5, color='black')  # Add black grid lines     
+    ax[0].grid(True, linestyle='--', linewidth=0.5, color='black')  
     
+    #Chunk Data
     
     chunk = cloudnet_slicer(cloudnet)
-
-    
     step = 1/len(chunk)
      
     cloud_layer.plot(y="height", ax=ax[1], levels=class_values, cmap=cmap, add_colorbar = False)
@@ -151,10 +136,10 @@ def plot_compare(date):
 
     
     #ax[0].set_xticks(rotation = 45)
-    #ax[1].set_xticks(rotation= 45)  # Rotate the tick labels for better visibility
-    plt.tight_layout()  # Adjust layout to prevent label overlap
+    #ax[1].set_xticks(rotation= 45)  
+    plt.tight_layout() 
     
-    # Add the date to the left bottom of the figure
+   
     date_str = date.strftime("%Y-%m-%d")
     fig.text(0.02, 0.02, "Date: " + date_str, fontsize=12, fontweight = "bold", ha='left', va='top')
     plt.savefig("/home/ralf/Studium/Bachelorarbeit/figures_new_schemes/"  
@@ -306,6 +291,7 @@ def plot_cmt_ctt():
     plt.tight_layout()
     plt.legend()
 
+
 def plot_cbh_cmt():
     
     dcoup = ds.where(ds.decoupling_height != -9999).dropna(dim = "time")
@@ -321,9 +307,7 @@ def plot_cbh_cmt():
     ax.hist(ds.cloud_min_temp, bins = bins, density = True, label = "cloud min temp", alpha = .65)
     ax.grid(visible = True)
     ax.grid(True, linestyle='--', linewidth=0.5, color='black')
-    
-    
-    #ax.scatter(ds.cloud_top_temp, ds.cloud_min_temp)
+
     
     ax.set_xlabel("Temperature [°C]")
     ax.set_ylabel("Relative Frequency")
@@ -374,8 +358,6 @@ def ice_coud_decoup():
     plt.tight_layout()
 
 def cth_ice():
-    
-    
     
     dcoup = ds.where(ds.decoupling_height != -9999, drop = True)
     coup  = ds.where(ds.decoupling_height == -9999, drop = True)
@@ -468,8 +450,6 @@ def plot_ice_fraction(ds):
     
     
     fig, ax = plt.subplots(figsize = (14, 6))
-    #plt.subplots_adjust(left=0.1, right=0.9, top= 0.9)
-
     
     percentages = ds_grouped.apply(calc_percentage)
     perc_decoup = dcoup_grouped.apply(calc_percentage)
@@ -483,9 +463,6 @@ def plot_ice_fraction(ds):
     sigma = error_bar(percentages)
     sigma_d = error_bar(perc_decoup)
     sigma_c = error_bar(perc_coup)
-    
-    # print(sigma_d[11:]*1000)
-    # print(sigma_c[11:]*1000)
     
     ax.errorbar(percentages.cloud_min_temp_bins, percentages, yerr=sigma*1000, label = "All Clouds", c= 'C0', capsize=3, capthick=3)
     
@@ -560,8 +537,6 @@ def plot_ice_fraction_height(ds):
         ice_clouds = (group.ice_fraction.where(group.ice_fraction > 5).sum())
         percentage = (ice_clouds / total_clouds)
         return percentage
-    
-
 
     def error_bar(group):
         n = ds.cloud_base_height.size
@@ -569,12 +544,11 @@ def plot_ice_fraction_height(ds):
         f = group/100
                
         return np.sqrt((f - f**2)/n)
-    
-    
-    
+       
     
     fig, ax = plt.subplots(figsize = (12, 6))
-    #plt.subplots_adjust(left=0.1, right=0.9, top= 0.9)
+    
+    
     percentages = ds_grouped.apply(calc_percentage)
     perc_decoup = dcoup_grouped.apply(calc_percentage)
     perc_coup = coup_grouped.apply(calc_percentage)
@@ -634,54 +608,6 @@ def plot_ice_fraction_height(ds):
     plt.close()
 
 #plot_ice_fraction_height(ds)
-
-
-def weird_ice(ds):
-    
-    ds_fake_ice = ds.where((ds.ice_fraction >= 5) & (ds.cloud_min_temp > 0), drop =True)
-    
-    
-    fi_decoup = ds_fake_ice.where(ds_fake_ice.decoupling_height != -9999, drop  = True)
-    
-    fi_coup = ds_fake_ice.where(ds_fake_ice.decoupling_height == -9999, drop  = True)
-    
-    
-    table_fi = [["Number of Layers", fi_decoup.time.size, fi_coup.time.size],
-        
-                ["cloud base < 500 m", fi_decoup.where(fi_decoup.cloud_base_height < 500, drop  = True).time.size
-                                        ,fi_coup.where(fi_coup.cloud_base_height < 500, drop  = True).time.size],
-                
-                ["Mean CMT in range cb < 500m" , fi_decoup.where(fi_decoup.cloud_base_height < 500, drop  = True).cloud_min_temp.median(),
-                                                fi_coup.where(fi_coup.cloud_base_height < 500, drop  = True).cloud_min_temp.median()],
-                
-                ["500 < cloud base < 1000 m", fi_decoup.where((fi_decoup.cloud_base_height > 500)&
-                                                              (fi_decoup.cloud_base_height < 1000), drop = True).time.size
-                                              , fi_coup.where((fi_coup.cloud_base_height > 500)&
-                                                              (fi_coup.cloud_base_height <1000), drop = True).time.size],
-                
-                ["Mean CMT in range 500 < cb < 1000" ,fi_decoup.where((fi_decoup.cloud_base_height > 500)&
-                                                              (fi_decoup.cloud_base_height < 1000), drop = True).cloud_min_temp.median()
-                                              , fi_coup.where((fi_coup.cloud_base_height > 500)&
-                                                              (fi_coup.cloud_base_height <1000), drop = True).cloud_min_temp.median() ],
-                
-                
-                ["cloud base > 1000 m", fi_decoup.where(fi_decoup.cloud_base_height >1000, drop  = True).time.size
-                                                    ,fi_coup.where(fi_coup.cloud_base_height > 1000, drop  = True).time.size],
-                
-                ["Mean CMT in range cb > 1000 m", fi_decoup.where(fi_decoup.cloud_base_height >1000, drop  = True).cloud_min_temp.median()
-                                                    ,fi_coup.where(fi_coup.cloud_base_height > 1000, drop  = True).cloud_min_temp.median()]
-                
-                ]
-                
-    
-                
-    
-    
-    header_fi  = [" ", "Decoupled", "Coupled"]
-    
-    
-    print(tabulate(table_fi, header_fi, tablefmt = "latex"))
-
 
 
 
@@ -864,9 +790,7 @@ def case_study(date, height, dc, Tmin, Tmax):
 
 
 def kde_dist(ds):
-   
-
-        
+     
     # dcoup = ds.where(ds.decoupling_height != -9999).dropna(dim = "time")
     # coup  = ds.where(ds.decoupling_height == -9999).dropna(dim = "time")
     
@@ -1045,32 +969,7 @@ def kde_ice(ds):
 
 
     
-#tables()
 
-#plot_cmt_ctt()
-
-#plot_cbh_cmt()
-
-#plot_coupling(ds)
-
-#plot_compare(datetime(2022, 1, 9, 18))   
-
-#kde_dist(ds)
-
-plot_compare(datetime(2022,1,9, 18))
-
-case_study(datetime(2022,1,9, 18), 6000, False, 240, 320)
-case_study(datetime(2022,1,26, 12), 4000, False, 260, 300)
-case_study(datetime(2022,12,5, 12), 6000, True, 240, 320)
-
-
-
-    
-#plot_ice_fraction(ds)
-
-#time = ds.ice_fraction.where((ds.cloud_min_temp >=-2) & (ds.cloud_min_temp <=0) & (ds.ice_fraction > 5),drop = True).to_pandas()
-
-    
 
 
 def seasons():
@@ -1119,5 +1018,37 @@ def seasons():
     # kde_dist(fall)
     # kde_dist(winter)
 
+
+
+"""Call Functions Below"""
+
+
+#tables()
+
+#plot_cmt_ctt()
+
+#plot_cbh_cmt()
+
+#plot_coupling(ds)
+
+#plot_compare(datetime(2022, 1, 9, 18))   
+
+#kde_dist(ds)
+
+plot_compare(datetime(2022,1,9, 18))
+
+#date, height, decoupled?, tmin, tmax
+
+case_study(datetime(2022,1,9, 18), 6000, False, 240, 320)
+case_study(datetime(2022,1,26, 12), 4000, False, 260, 300)
+case_study(datetime(2022,12,5, 12), 6000, True, 240, 320)
+
+
+
+    
+#plot_ice_fraction(ds)
+
+
+    
 
 
