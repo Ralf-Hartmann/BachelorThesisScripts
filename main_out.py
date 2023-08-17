@@ -23,112 +23,6 @@ start_time = datetime.now()
 
 
 
-
-
-# def out_decoupling(start_date, end_date):
-    
-#     decoupling = []
-    
-    
-#     while (start_date <= end_date):
-            
-#         #try opening file!
-#         try:
-                      
-#                 cloudnet = in_cloudnet(start_date)
-#                 sounding = in_sounding(start_date)
-                
-                
-#                 sounding = sounding.where(sounding.height.where((sounding.height > sounding.height[0]+100)))
-#                 sounding = sounding.where(sounding.height.where(sounding.height <12000))
-                
-#                 ###############
-#                 #Do Something #
-#                 ###############
-                
-#                 chunk = cloudnet_slicer(cloudnet)
-                
-#                 for layer in chunk:
-                    
-#                     #try chunked cloud_base -> empty slices get ignored
-#                     ## Suspicion: Empty slices get classed as coupled!!!!!!
-#                         try:                                   
-#                             cloud_base = get_cloudbase(layer)
-                                                                                                              
-#                             theta = theta_profile(sounding)
-                                                
-#                             theta = theta.where((theta.height <= cloud_base)).dropna(dim ="time")
-                                
-#                             height_sounding = theta.height.values
-#                             theta_sounding = theta.values
-#                             theta_threshold = 0.5 
-                                                    
-#                             for hidx in range(height_sounding.shape[0]):
-                                
-#                                     theta_cumsum = np.cumsum(theta_sounding[hidx::-1])
-                                
-#                                     theta_cummean = theta_cumsum / np.arange(1,hidx+2)
-                                
-#                                     theta_diff = theta_cummean-theta_sounding[hidx::-1]
-                                    
-                                    
-                                    
-#                             if (round(np.nanmax(theta_diff))>=theta_threshold):
-                                         
-#                                         decoupling_height.append([height_sounding[hidx],layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
-#                                         ch = height_sounding[hidx] 
-                                        
-#                             else:
-#                                         #mark decoupled layers with -9999
-#                                         decoupling_height.append([-9999,layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
-#                                         ch = -9999
-#                             #write directly into txt file without list appending?
-#                             print(ch)
-#                             print(layer["time"][0].dt.strftime("%Y-%m-%d-%H-%M").values)
-        
-                        
-        
-                                        
-        
-#                         except:
-#                                     pass
-                    
-                    
-#         except: IOError
-#         pass
-        
-#         start_date += timedelta(hours=6)
-    
-#     # Flatten list
-#     coupling_list_arr = np.array([decoupling])
-    
-    
-#     #reshape to 2 columns -> I hope this doesnt crash
-#     #array.size + 1 to have even integer
-#     coupling_list_flat= coupling_list_arr.reshape((int((coupling_list_arr.size+1)/2), 2))
-    
-    
-#     save_path = "/home/ralf/Studium/Bachelorarbeit/calc_results"   
-    
-#     file_name = "decoupling_height_new"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
-    
-#     complete_name = os.path.join(save_path, file_name)
-    
-    
-        
-#     with open(os.path.join(save_path, complete_name) + ".txt", "w") as output:
-#           for i in np.arange(coupling_list_flat.shape[0]):
-#                   output.write(str(coupling_list_flat[i, 1]))
-#                   output.write(";")
-#                   output.write(str(coupling_list_flat[i, 0]))
-#                   output.write("\n")
-    
-        
-        
-#     #Check runtime
-#     print("runtime" + " " +str(datetime.now() - start_time ))
-
-
 def out_decoupling(start_date, end_date):
     
 
@@ -157,7 +51,7 @@ def out_decoupling(start_date, end_date):
 
                     decoupling_height.append([decoupling_new(sounding, layer).item(),layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
                     print(layer["time"][0].dt.strftime("%Y-%m-%d-%H-%M").values)
-        except:
+        except: ValueError
                     pass
         
                 
@@ -257,59 +151,6 @@ def out_cloud_min_temp(start_date, end_date):
     print("runtime" + " " +str(datetime.now() - start_time ))    
     
 
-def out_ice_flag(start_date, end_date):
-    
-    
-    ice_flag = []
-
-    while start_date <= end_date:
-
-        try:
-            cloudnet = in_cloudnet(start_date)
-            sounding = in_sounding(start_date)
-            
-            chunk = cloudnet_slicer(cloudnet)
-                            
-            for layer in chunk:
-                    try:
-                        ice_flag.append([contains_ice(layer),layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
-                        print(layer["time"][0].dt.strftime("%Y-%m-%d-%H-%M").values)
-                    except:
-                        pass
-        except:
-               pass    
-        
-        start_date += timedelta(hours = 6)
-        
-        
-    # Flatten list
-    ice_flag_arr = np.array([ice_flag])
-
-
-    #reshape to 2 columns -> I hope this doesnt crash
-    #array.size + 1 to have even integer
-    ice_flag_flat= ice_flag_arr.reshape((int((ice_flag_arr.size+1)/2), 2))
-    
-    
-    
-    save_path = "/home/ralf/Studium/Bachelorarbeit/calc_results"   
-    
-    file_name = "ice_flag"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
-    
-    complete_name = os.path.join(save_path, file_name)
-        
-    with open(os.path.join(save_path, complete_name) + ".txt", "w") as output:
-          for i in np.arange(ice_flag_flat.shape[0]):
-                  output.write(str(ice_flag_flat[i, 1]))
-                  output.write(";")
-                  output.write(str(ice_flag_flat[i, 0]))
-                  output.write("\n")
-
-        
-        
-    #Check runtime
-    print("runtime" + " " +str(datetime.now() - start_time ))
-
 
 def out_ice_flag_thresh(start_date, end_date):
     
@@ -326,7 +167,7 @@ def out_ice_flag_thresh(start_date, end_date):
                             
             for layer in chunk:
                     try:
-                        ice_flag.append([contains_ice_thresh_new(layer),
+                        ice_flag.append([contains_ice(layer),
                                     
                                          layer["time"][0].dt.strftime("%Y%m%d%H%M").values ])
                         print(layer["time"][0].dt.strftime("%Y-%m-%d-%H-%M").values)
@@ -351,7 +192,7 @@ def out_ice_flag_thresh(start_date, end_date):
     
     save_path = "/home/ralf/Studium/Bachelorarbeit/calc_results"   
     
-    file_name = "ice_flag_thresh_new_new"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
+    file_name = "ice_flag_thresh"+ "_" + str(dt.datetime.strftime(start_date - timedelta(hours = 1), "%Y"))
     
     complete_name = os.path.join(save_path, file_name)
         
