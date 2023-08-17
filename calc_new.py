@@ -19,16 +19,9 @@ from metpy.calc import gradient_richardson_number
 from metpy.units import units
 
 
-#####################################################
-#Metpy Units: Implement withouth breaking everything?
-#####################################################
-
-
-#Remove height slicing to above 100m at function level and implement at actual
-#calculation level to have more general functions?
-
 
 #Define functions
+
 def cloudnet_slicer(cloudnet):
     start_time= cloudnet.time[0].values
     end_time = cloudnet.time[cloudnet.time.size-1].values
@@ -42,66 +35,6 @@ def cloudnet_slicer(cloudnet):
         cloudnet_chunk.append(chunk)
     
     return cloudnet_chunk
-
-
-def contains_ice(cloudnet):
-
-    cloudbase = get_cloudbase(cloudnet)
-    
-    cloudtop = get_cloudtop(cloudnet)
-    
-    cl_i = cloudnet.target_classification.where((cloudnet.height >= cloudbase) & (cloudnet.height <= cloudtop))
-    
-    #remove all non-Ice cloud pixel data!
-    
-    cl_i = cl_i.where(((cl_i >=4) & (cl_i <=7)))
-    
-    #detect if ice pixel in cloud_layer
-    #check if all entries in array are nan
-    all_nan = np.isnan(cl_i).all()
-    
-    #check if array contains any cloud pixel classed as ice
-    any_int = np.issubdtype(cl_i.dtype, float)
-    
-    if all_nan:
-        contains_ice = False
-    elif any_int:
-        contains_ice = True
-    
-    return contains_ice
-
-
-
-
-def contains_ice_thresh(cloudnet):
-
-    cloudbase = get_cloudbase(cloudnet)
-    
-    cloudtop = get_cloudtop(cloudnet)
-    
-    cl_i = cloudnet.target_classification.where(
-        (cloudnet.height >= cloudbase) & (cloudnet.height <= cloudtop))
-    
-    
-    count_ice = np.sum(cl_i.where(((cl_i >=4) & (cl_i <= 7)), drop = True))
-        
-    count_cloud_pixel = np.sum(cl_i.where(((cl_i >=1) & (cl_i <=7)),drop = True))
-    
-    
-    #nan_count = np.sum(~np.isnan(cl_i))
-    
-    percentage_ice = (count_ice/ count_cloud_pixel)*100
-    
-    #Threshold of 5% (Radenz 2021)!
-    
-    threshold = 5
-    
-    if percentage_ice >= threshold:
-       return(True)
-    else:
-        return(False)
-    
-    print("runtime func "+str(datetime.now() - start_time ))
 
 
 def contains_ice_thresh_new(cloudnet):
@@ -121,16 +54,6 @@ def contains_ice_thresh_new(cloudnet):
     
     percentage_ice = (count_ice/ count_cloud_pixel)*100
     
-    # print(percentage_ice)
-    # #set to arbitrary treshold for testing!
-    
-    #threshold = 5
-    
-    # if percentage_ice >= threshold:
-    #     contains_ice  =True
-    # else:
-    #     contains_ice = False
-        
     return round(percentage_ice,3)
 
 def get_ice_percentage(cloudnet):
@@ -154,19 +77,11 @@ def get_ice_percentage(cloudnet):
     return round(percentage_ice,3)
 
 
-
-
 def theta_profile(sounding):
       
     theta = (sounding.temperature + 273.15) * \
             (sounding.pressure[0] / sounding.pressure) ** (2/7)
-    # theta.name = "theta"
-    
-    # profile = xr.merge([theta, sounding])    
-    #profile = profile.assign_coords({"height" : profile.height})
-    ##Already assigned by read_files module!
     return theta
-
 
 
 def get_cloud_layer(cloudnet):
@@ -196,8 +111,7 @@ def get_cloudbase(cloudnet):
     #too few detections: set cloud_base_val to ErrorValue and pass ignore statement to cloudtop function (?)
    
     except:ValueError
-    #     #cloud_base_val = 
-    pass
+        pass
 
   
 
@@ -227,7 +141,7 @@ def get_cloudtop(cloudnet):
         cloudtop_val = np.array(cloudtop).max()
         
         return cloudtop_val
-    except:
+    except: ValueError
         pass
 
 
@@ -284,29 +198,6 @@ def decoupling_new(sounding, cloudnet):
         if not decoupling_height:
             decoupling_height.append(-9999)
         return np.array(decoupling_height)
-    except:
+    except: ValueError
         decoupling_height.append(np.nan)
-
-
-def pbl_theta_new(sounding):
-    #Calculate inversion height through greatest gradient of potential temperature in troposphere
-    #Cut to above 100 meter and below cloud_top_height   
-    theta= theta_profile(sounding)    
-    
-    #Differentiate to with respect to height
-    
-    gradient_theta = theta.where((theta.height[0] >= 100) & (theta.height < 12000) ).differentiate(coord = "height")
-    
-    #Find first spike in gradient from surface upwards?    
-    
-    gradient_theta = gradient_theta.where(gradient_theta > 0).dropna(dim= "time")
-           
-    for hidx in np.arange(gradient_theta.size):
-        if gradient_theta[hidx] >= 0.05:
-            max_grad_height = gradient_theta[hidx].height
-            break
-    return max_grad_height.values.item()
-
-
-
 
