@@ -9,12 +9,13 @@ Created on Sun Jul  9 18:49:53 2023
 import datetime as dt
 from datetime import datetime, timedelta
 import pandas as pd
-import matplotlib.pyplot as plt
-from calc_new import *
-from read_files import *
+import calc_new
+import read_files
 import xarray as xr
 import os.path
 
+
+#Generate .txt files with parameters
 
 
 start_time = datetime.now()
@@ -152,7 +153,7 @@ def out_cloud_min_temp(start_date, end_date):
     
 
 
-def out_ice(start_date, end_date):
+def out_ice_frac(start_date, end_date):
     
     ice_flag = []
     
@@ -384,16 +385,14 @@ end_date = datetime(2022, 12, 31,18)
 
 #call functions here !
 
-#out_decoupling(start_date, end_date)
+out_decoupling(start_date, end_date)
 
-#out_cloud_min_temp(start_date, end_date)
+out_cloud_min_temp(start_date, end_date)
 
-#out_cloud_base_height(start_date, end_date)
+out_cloud_base_height(start_date, end_date)
 
-#out_cloud_top_height(start_date, end_date)
+out_cloud_top_height(start_date, end_date)
 
-#out_ice_flag_thresh(start_date, end_date)
+out_ice_fract(start_date, end_date)
 
-#out_pbl_height(start_date, end_date)
-
-#process_ice(start_date, end_date)
+out_pbl_height(start_date, end_date)
