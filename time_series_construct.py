@@ -9,8 +9,7 @@ import xarray as xr
 import pandas as pd
 import os.path
 
-#read in files as product file!
-#do not calculate for graphics!
+#Construct dataset of calculated parameters and save as NetCDF for further processing
 
 path = '/home/ralf/Studium/Bachelorarbeit/calc_results/'
 
