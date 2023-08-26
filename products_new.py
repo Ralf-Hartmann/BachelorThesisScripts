@@ -27,7 +27,6 @@ plt.rcParams.update({"axes.labelweight": "bold"})
 plt.rcParams.update({"figure.autolayout" : True})
 
 #read in files as product file!
-#do not calculate for graphics!
 
 path = '/home/ralf/Studium/Bachelorarbeit/calc_results/'
 
@@ -35,7 +34,7 @@ ds = xr.open_dataset(path + "time_series_data_new.nc")
 
 
 
-#choose only times all values are present!
+#choose only periods without missing values
 ds = ds.dropna(dim = "time")
 
 def plot_compare(date):
